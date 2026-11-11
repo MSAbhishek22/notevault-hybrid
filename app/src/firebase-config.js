@@ -28,11 +28,23 @@
 export const CLOUD_MODEL = "gemini-3.5-flash-lite";
 
 // reCAPTCHA Enterprise site key for Firebase App Check (production).
-// Created in the Firebase console → App Check → Apps → reCAPTCHA Enterprise.
-// Empty = App Check is NOT initialised by the app; see README.md § Firebase
-// setup. (Localhost uses the App Check debug provider instead — also in the
-// README.) Leave empty until the console step is done.
-export const APP_CHECK_SITE_KEY = "";
+// Read at call time from VITE_RECAPTCHA_ENTERPRISE_KEY — set it in Vercel →
+// Project → Settings → Environment Variables at deploy time (the key itself
+// is created in the Firebase console → App Check → Apps → reCAPTCHA
+// Enterprise; it is a public client key and ships in the web bundle by
+// design). Empty = App Check is NOT initialised by the app; firebase-app.js
+// then logs a warning and continues without it (cloud calls will be
+// rejected while the console enforces App Check). Never hardcode the key
+// here — the value lives in deploy env vars only. (Localhost uses the App
+// Check debug provider instead — see README.md § Firebase setup.)
+export function getAppCheckSiteKey() {
+  try {
+    const env = import.meta.env ?? {};
+    return env.VITE_RECAPTCHA_ENTERPRISE_KEY || "";
+  } catch {
+    return "";
+  }
+}
 
 export const FIREBASE_CONFIG = {
   apiKey: "YOUR_API_KEY",

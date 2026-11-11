@@ -38,8 +38,19 @@ is still missing, and what console step the parent/user must do.
   (`YOUR_API_KEY`, `YOUR_PROJECT_ID`, …). Real config comes from `VITE_FIREBASE_*`
   env vars at deploy time. A Firebase web `apiKey` is a public client identifier,
   not a secret — but even so, no real value lives in this repo.
-- **App Check:** initialised only when `APP_CHECK_SITE_KEY` is set; otherwise the
-  console warns and the app continues without it (documented, not hidden).
+- **App Check:** initialised in `getFirebase()` (`src/firebase-app.js`)
+  **before** `getAI()` and before any model call, so every AI Logic request
+  carries a token. Provider is `ReCaptchaEnterpriseProvider` with
+  `isTokenAutoRefreshEnabled: true`; the site key is resolved **at call
+  time** from `VITE_RECAPTCHA_ENTERPRISE_KEY`
+  (`getAppCheckSiteKey()` in `src/firebase-config.js` — never hardcoded).
+  Missing key → a clear console warning and the app continues without App
+  Check (no crash, no blocked call); cloud calls are then rejected while
+  the console enforces App Check. Console state 12 Nov: web app registered
+  in App Check (reCAPTCHA Enterprise, token TTL 1h), enforcement **ON** for
+  Firebase AI Logic ("Basic - Enforced", Replay Off). Proven by test (24th
+  test): init is attempted before the first AI call when the key is set, and
+  only warns when it is missing.
 
 ## What is honest fallback, not fake
 
@@ -59,9 +70,19 @@ is still missing, and what console step the parent/user must do.
 
 ## What is NOT yet verified / NOT done
 
-- **No Firebase project exists yet.** Until the console step below is done, the
-  app cannot make a live AI call anywhere. Tests prove the wiring against a
-  recording fake SDK; they do not prove a live call.
+- **Firebase project exists and the app is deployed live**
+  (https://notevault-hybrid.vercel.app/, protection OFF, notes persist) —
+  but **live Ask still fails** as of 12 Nov 01:44 IST: `[400] Firebase AI
+  Logic genai config not found` from
+  `firebasevertexai.googleapis.com/v1beta/.../gemini-3.5-flash-lite:generateContent`.
+  The console shows Gemini Developer API Enabled, Firebase AI API Enabled,
+  App Check registered + enforced, and offers no "Get started" step to
+  create the missing genai config. The App Check code change above is the
+  remaining fix named by the browser report; whether it clears this error
+  is **unverified until the Vercel env var + redeploy + live re-verify**
+  (parent's next steps). If the error survives the redeploy, the next step
+  is a fresh console look for the provider-setup step — do not work around
+  it by switching to Vertex AI / Agent Platform.
 - **Live end-to-end unverified in this sandbox** (no network-reaching Chromium,
   no Firebase project). Must be verified on the deployed site by the parent:
   1. Open the live URL in Chrome Desktop 139+ (Prompt API flag on if needed).
@@ -90,10 +111,13 @@ is still missing, and what console step the parent/user must do.
    `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`
    (or paste the same values into `src/firebase-config.js` — local only, never
    commit real values).
-5. **App Check (optional but recommended for production):** Firebase console →
-   App Check → register the web app with **reCAPTCHA Enterprise** → set
-   `VITE_FIREBASE_APP_CHECK_SITE_KEY`. For localhost testing, create a debug
-   token instead (console → App Check → Manage debug tokens).
+5. **App Check (required — Firebase enforces it for AI Logic since 2 Nov
+   2026, and the event needs it for submission):** Firebase console → App
+   Check → register the web app with **reCAPTCHA Enterprise** → set
+   `VITE_RECAPTCHA_ENTERPRISE_KEY` in Vercel env vars (the site key is a
+   public client key; it ships in the bundle by design). For localhost
+   testing, create a debug token instead (console → App Check → Manage
+   debug tokens).
 6. **Budget meter:** read the free-tier RPD for `gemini-3.5-flash-lite` from
    Google AI Studio for this project and update `BUDGET` in `src/budget.js`
    (set `BUDGET_VERIFIED = true` when done).
@@ -124,6 +148,12 @@ is still missing, and what console step the parent/user must do.
   the 5 Nov MOCK engine", `MOCK_ENGINE = false` flag) and the test asserting
   `MOCK_ENGINE` is false. No mock engine code remains.
 
+- **Known live quirk (browser observation, 12 Nov):** repeated Asks without
+  a page reload sometimes fail with an IndexedDB error ("Failed to execute
+  'transaction' on 'IDBDatabase': The database connection is closing"); a
+  fresh reload before Ask avoids it. Not yet root-caused; treat as a
+  verification-time workaround, not a fix.
+
 ## Files changed 12 Nov (real wiring)
 
 - `src/firebase-config.js` (new) — placeholders + env override + `isFirebaseConfigured()`
@@ -133,3 +163,14 @@ is still missing, and what console step the parent/user must do.
 - `index.html`, `src/style.css`, `src/budget.js` — banner/label renames + cloud-model note
 - `package.json` — `firebase ^12.0.0` → `^12.5.0`; `firebase` 12.19.0 installed
 - `test/hybrid.test.js` (new) — 23 tests (see above)
+- `src/firebase-config.js` (12 Nov, App Check wiring) — `APP_CHECK_SITE_KEY`
+  hardcoded `""` replaced by `getAppCheckSiteKey()`, which reads
+  `VITE_RECAPTCHA_ENTERPRISE_KEY` at call time (never hardcoded)
+- `src/firebase-app.js` (12 Nov, App Check wiring) — `getFirebase()` now
+  resolves the key at call time and initialises App Check
+  (`ReCaptchaEnterpriseProvider`, `isTokenAutoRefreshEnabled: true`)
+  before `getAI()` / any model call; missing key warns and continues
+- `test/hybrid.test.js` (12 Nov, App Check wiring) — 24th test: init
+  attempted before the first AI call when the key is set (order
+  `appCheck` → `getAI`, provider key + auto-refresh asserted); missing
+  key warns only, no crash, AI call still goes through

@@ -14,14 +14,15 @@
 // Backend: Gemini Developer API (free tier, no card) via GoogleAIBackend.
 // Vertex AI / Agent Platform is NEVER used — it needs Blaze billing.
 //
-// App Check: initialised ONLY when APP_CHECK_SITE_KEY is set (production,
-// reCAPTCHA Enterprise site key from the console). With the key empty the
-// app skips App Check and logs a warning — cloud calls may then be rejected
-// if App Check is enforced in the console; see README.md § Firebase setup
-// for the debug-provider (localhost) and reCAPTCHA (production) steps.
+// App Check: initialised ONLY when a site key is set (production,
+// reCAPTCHA Enterprise site key from VITE_RECAPTCHA_ENTERPRISE_KEY).
+// With the key empty the app skips App Check and logs a warning — cloud
+// calls may then be rejected if App Check is enforced in the console; see
+// README.md § Firebase setup for the debug-provider (localhost) and
+// reCAPTCHA (production) steps.
 import {
   FIREBASE_CONFIG,
-  APP_CHECK_SITE_KEY,
+  getAppCheckSiteKey,
   isFirebaseConfigured,
 } from "./firebase-config.js";
 
@@ -65,10 +66,14 @@ export async function getFirebase({ sdk = null, config = FIREBASE_CONFIG } = {})
     }
   }
 
-  if (APP_CHECK_SITE_KEY) {
+  // App Check is initialised here, before getAI() and before any model
+  // call, so every AI Logic request carries an App Check token. The key is
+  // resolved at call time (not import time) so tests can stub the env var.
+  const appCheckSiteKey = getAppCheckSiteKey();
+  if (appCheckSiteKey) {
     const acMod = sdk?.appCheck ?? (await import("firebase/app-check"));
     acMod.initializeAppCheck(app, {
-      provider: new acMod.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
+      provider: new acMod.ReCaptchaEnterpriseProvider(appCheckSiteKey),
       isTokenAutoRefreshEnabled: true,
     });
   } else if (typeof console !== "undefined" && typeof console.warn === "function") {

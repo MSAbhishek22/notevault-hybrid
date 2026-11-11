@@ -361,6 +361,63 @@ describe("getDeviceModelAvailability()", () => {
   });
 });
 
+// --- App Check initialisation ----------------------------------------------
+describe("App Check initialisation", () => {
+  it("initialises App Check before the first AI call when the site key is set, and only warns (no crash, no blocked call) when it is missing", async () => {
+    const order = [];
+    const { sdk, calls, hybridModel } = makeFakeSdk({ source: "in_cloud" });
+    sdk.appCheck = {
+      initializeAppCheck: vi.fn(() => {
+        order.push("appCheck");
+      }),
+      ReCaptchaEnterpriseProvider: class {
+        constructor(key) {
+          this.key = key;
+        }
+      },
+    };
+    sdk.ai.getAI = vi.fn((app, opts) => {
+      order.push("getAI");
+      return { app, backend: opts?.backend };
+    });
+
+    // Half 1 — key present: init runs before getAI, hence before any model call.
+    vi.stubEnv("VITE_RECAPTCHA_ENTERPRISE_KEY", "test-recaptcha-key");
+    const model = createModel({ sdk, config: FAKE_CONFIG });
+    const res = await ask(model, "What about the tomatoes?");
+    expect(res.inferenceSource).toBe("IN_CLOUD");
+    expect(sdk.appCheck.initializeAppCheck).toHaveBeenCalledTimes(1);
+    const [, acOpts] = sdk.appCheck.initializeAppCheck.mock.calls[0];
+    expect(acOpts.provider.key).toBe("test-recaptcha-key");
+    expect(acOpts.isTokenAutoRefreshEnabled).toBe(true);
+    expect(order).toEqual(["appCheck", "getAI"]);
+    expect(calls.some((c) => c.kind === "getGenerativeModel")).toBe(true);
+    expect(hybridModel.generateContent).toHaveBeenCalledTimes(1);
+
+    // Half 2 — key missing: only a warning, no crash, the AI call still goes through.
+    vi.unstubAllEnvs();
+    resetFirebaseForTests();
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { sdk: sdk2, hybridModel: hybridModel2 } = makeFakeSdk({ source: "in_cloud" });
+    sdk2.appCheck = {
+      initializeAppCheck: vi.fn(),
+      ReCaptchaEnterpriseProvider: class {
+        constructor(key) {
+          this.key = key;
+        }
+      },
+    };
+    const model2 = createModel({ sdk: sdk2, config: FAKE_CONFIG });
+    const res2 = await ask(model2, "What about the tomatoes?");
+    expect(res2.inferenceSource).toBe("IN_CLOUD");
+    expect(sdk2.appCheck.initializeAppCheck).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("App Check site key is not set"));
+    expect(hybridModel2.generateContent).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+    vi.unstubAllEnvs();
+  });
+});
+
 // --- Budget meter (kept from the shell harness) ------------------------------
 describe("budget meter", () => {
   it("counts cloud and on-device calls separately and stays a placeholder", () => {
