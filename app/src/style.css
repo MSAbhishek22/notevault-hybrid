@@ -1,0 +1,215 @@
+/* NoteVault Hybrid — app shell styles (5 Nov 2026).
+   Clean notes-app look: warm paper, ink text, one accent per route.
+   Green = on-device, blue = cloud, amber/red = warnings and refusals.
+   No frameworks, no CDN, no webfonts — works fully offline. */
+:root {
+  --paper: #f7f4ed;
+  --panel: #fffdf7;
+  --ink: #1a1a18;
+  --muted: #6b675e;
+  --line: #ddd5c3;
+  --device: #1f6b3a;
+  --device-bg: #e3f2e6;
+  --cloud: #1d4ed8;
+  --cloud-bg: #dbeafe;
+  --warn: #8a6d00;
+  --warn-bg: #fdf3c7;
+  --danger: #b42318;
+  --danger-bg: #fdecea;
+  --accent: #1f6b3a;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 2px solid var(--ink);
+}
+
+header h1 { margin: 0 0 0.25rem; font-size: 1.6rem; }
+header .tagline { margin: 0 0 0.75rem; color: var(--muted); }
+
+#engine-banner {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn);
+  color: var(--ink);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.header-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.privacy-toggle { display: flex; align-items: center; gap: 0.4rem; font-weight: 600; }
+#mode-badge { font-family: ui-monospace, monospace; font-size: 0.85rem; }
+#model-status, #online-status { color: var(--muted); font-size: 0.9rem; }
+
+main {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  main { grid-template-columns: 340px 1fr; }
+  #vault { grid-row: span 3; }
+}
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+
+section h2 { margin: 0 0 0.5rem; font-size: 1.15rem; }
+section h3 { margin: 0 0 0.5rem; }
+section h4 { margin: 0.75rem 0 0.25rem; }
+.hint { color: var(--muted); font-size: 0.92rem; }
+.note { color: var(--muted); font-size: 0.88rem; }
+
+input[type="text"], input[type="search"], textarea {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  margin-bottom: 0.5rem;
+}
+
+textarea { min-height: 90px; resize: vertical; }
+
+button {
+  font: inherit;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+}
+button.secondary { background: transparent; color: var(--ink); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button:hover:not(:disabled) { filter: brightness(1.15); }
+.mini-btn { padding: 0.15rem 0.5rem; font-size: 0.8rem; }
+.btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0; }
+
+/* Vault list */
+#note-list { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+#note-list li {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  background: #fff;
+}
+#note-list li.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+#note-list li.empty { cursor: default; color: var(--muted); }
+.note-title { font-weight: 700; }
+.note-excerpt { font-size: 0.88rem; color: var(--muted); margin: 0.2rem 0 0.4rem; }
+.note-meta { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; font-size: 0.8rem; }
+.source-badge {
+  background: var(--ink); color: #fff; border-radius: 4px;
+  padding: 0.05rem 0.4rem; font-size: 0.75rem; letter-spacing: 0.03em;
+}
+.tag {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: 20px; padding: 0.05rem 0.5rem; font-size: 0.78rem;
+}
+.note-body {
+  white-space: pre-wrap; font: inherit; background: #fff;
+  border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem;
+  max-height: 320px; overflow: auto;
+}
+
+/* Answer + routing */
+#answer {
+  background: #fff; border: 1px solid var(--line); border-radius: 8px;
+  padding: 0.75rem; min-height: 3rem; margin: 0.5rem 0;
+}
+#routing-panel, .route-line {
+  display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+  font-size: 0.88rem; margin: 0.5rem 0;
+}
+.chip {
+  display: inline-block; border-radius: 20px; padding: 0.1rem 0.65rem;
+  font-weight: 700; font-size: 0.82rem;
+}
+.chip-device { background: var(--device-bg); color: var(--device); border: 1px solid var(--device); }
+.chip-cloud { background: var(--cloud-bg); color: var(--cloud); border: 1px solid var(--cloud); }
+.chip-none { background: var(--paper); color: var(--muted); border: 1px solid var(--line); }
+.engine-tag {
+  background: var(--warn-bg); border: 1px solid var(--warn); color: var(--ink);
+  border-radius: 4px; padding: 0.05rem 0.4rem; font-size: 0.75rem; font-weight: 700;
+}
+.route-meta { color: var(--muted); }
+.refusal { color: var(--danger); font-weight: 600; }
+.warning {
+  background: var(--warn-bg); border: 1px solid var(--warn);
+  border-radius: 8px; padding: 0.5rem 0.75rem; margin: 0.5rem 0; font-size: 0.92rem;
+}
+.bullets { margin: 0.25rem 0 0.5rem; padding-left: 1.25rem; }
+.json {
+  background: var(--ink); color: #e8e6df; border-radius: 8px;
+  padding: 0.75rem; overflow: auto; font-size: 0.85rem;
+}
+details { margin-top: 0.5rem; }
+details summary { cursor: pointer; font-weight: 600; }
+
+/* Deep Dive chat */
+#chat-log {
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  min-height: 140px; max-height: 320px; overflow: auto; padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.chat-line { margin-bottom: 0.75rem; }
+.chat-line.chat-user { text-align: right; }
+.chat-line.chat-system { color: var(--muted); font-size: 0.9rem; }
+
+/* Budget meter */
+.budget-bar {
+  height: 10px; background: var(--paper); border: 1px solid var(--line);
+  border-radius: 6px; overflow: hidden; margin: 0.35rem 0;
+}
+.budget-fill { height: 100%; background: var(--cloud); }
+.budget-row { font-size: 0.92rem; }
+.budget-note { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+
+/* Organise */
+.org-group {
+  background: #fff; border: 1px solid var(--line); border-radius: 8px;
+  padding: 0.5rem 0.75rem; margin-bottom: 0.4rem;
+}
+
+footer {
+  padding: 1rem 1.5rem 2rem; color: var(--muted); font-size: 0.88rem;
+  max-width: 1100px; margin: 0 auto;
+}
+
+:focus-visible { outline: 3px solid var(--cloud); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NoteVault Hybrid — your notes, on-device first</title>
+  <meta name="description" content="NoteVault Hybrid: your notes never leave your device unless you ask. On-device first, cloud when it earns it. Firebase AI Logic hybrid inference (Gemini Nano + cloud Gemini)." />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header>
+    <h1>NoteVault Hybrid</h1>
+    <p class="tagline">Your notes never leave your device unless you ask.</p>
+    <div id="engine-banner" role="status">Loading…</div>
+    <div class="header-row">
+      <label class="privacy-toggle">
+        <input type="checkbox" id="privacy-mode" />
+        Keep my notes on this device (on-device only)
+      </label>
+      <span id="mode-badge">Mode: hybrid (PREFER_ON_DEVICE)</span>
+      <span id="model-status">Model: not initialised</span>
+      <span id="online-status">Online</span>
+    </div>
+  </header>
+
+  <main>
+    <section id="vault" aria-label="Vault">
+      <h2>Vault</h2>
+      <p class="hint">Notes live in this browser (IndexedDB). No account, no server.</p>
+      <label for="search-notes">Search your notes</label>
+      <input id="search-notes" type="search" placeholder="Search notes…" autocomplete="off" />
+      <p id="note-count" class="note">…</p>
+      <ul id="note-list"></ul>
+
+      <h3>Import notes</h3>
+      <label for="import-notes">Import .md / .txt files</label>
+      <input type="file" id="import-notes" accept=".md,.txt" multiple />
+      <label for="paste-title">Or paste a note</label>
+      <input id="paste-title" type="text" placeholder="Note title" />
+      <textarea id="paste-body" placeholder="Paste note text here…"></textarea>
+      <div class="btn-row">
+        <button id="paste-add">Add pasted note</button>
+        <button id="restore-samples" class="secondary">Restore sample notes</button>
+      </div>
+      <p id="import-status" class="note" role="status"></p>
+
+      <h3>Selected note</h3>
+      <div id="note-preview">
+        <p class="hint">Select a note to preview it, summarise it, or delete it.</p>
+      </div>
+    </section>
+
+    <section id="ask" aria-label="Ask your notes">
+      <h2>Ask your notes</h2>
+      <p class="hint">Single-turn, grounded in your notes. If no note matches, the app says so before any model call — no budget spent.</p>
+      <label for="question">Your question</label>
+      <input id="question" type="text" placeholder="Ask about your notes…" autocomplete="off" />
+      <div class="btn-row">
+        <button id="ask-btn">Ask</button>
+        <button id="init-model-btn" class="secondary">Enable on-device model</button>
+      </div>
+      <div id="answer" aria-live="polite"></div>
+      <div id="routing-panel"></div>
+    </section>
+
+    <section id="deep-dive" aria-label="Deep Dive">
+      <h2>Deep Dive (cloud)</h2>
+      <p id="deep-dive-note" class="hint">Multi-note synthesis + follow-up chat. Cloud-only — the app says so before you send anything.</p>
+      <div id="chat-log" aria-live="polite"></div>
+      <label for="chat-input">Follow up</label>
+      <input id="chat-input" type="text" placeholder="Follow up…" autocomplete="off" />
+      <div class="btn-row">
+        <button id="chat-send">Send</button>
+      </div>
+      <h3>Budget meter</h3>
+      <div id="budget-meter"></div>
+    </section>
+
+    <section id="organise" aria-label="Organise">
+      <h2>Organise</h2>
+      <p class="hint">A grouping plan by tag. Plan only — no notes are changed, no files are moved.</p>
+      <div class="btn-row">
+        <button id="organise-btn">Make a tag plan</button>
+      </div>
+      <div id="organise-output"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>NoteVault Hybrid — real Firebase AI Logic wiring (12 Nov 2026). Every AI call goes
+    through the Firebase AI Logic SDK (Gemini Developer API, free tier): on-device Gemini
+    Nano when available, cloud gemini-3.5-flash-lite otherwise. If no Firebase project is
+    configured, the vault and grounded search still work and model calls fail loudly —
+    see README.md § Firebase setup. Sample notes are synthetic and labelled. Budget
+    numbers are placeholders until the free-tier limit is read from AI Studio.</p>
+  </footer>
+
+  <noscript><p style="padding:1rem">NoteVault Hybrid needs JavaScript — the vault, search and hybrid engine all run in your browser.</p></noscript>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
