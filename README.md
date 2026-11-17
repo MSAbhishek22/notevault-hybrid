@@ -4,6 +4,8 @@
 browser (Gemini Nano, free, instant, offline, private); deep work goes to cloud Gemini —
 and every answer shows you which path served it and why.
 
+**Live demo:** https://notevault-hybrid.vercel.app
+
 ## Status
 
 | Item | State |
@@ -12,7 +14,7 @@ and every answer shows you which path served it and why.
 | Prize | $30,000 Grand Prize, 1 winner — REGISTERED 12 Nov 00:59 IST (solo; 1,457 participants at registration). Prize split contradictory on the page ($30,000 Grand vs $10,000 Grand + $3,000/platform) — quote neither as final; formal Official Rules still unpublished — re-check when they post. |
 | Window | Submissions 11–30 Nov 2026 (close 1 Dec 03:30 IST) |
 | Eligibility | Solo OK; **India NOT excluded** (verified 12 Nov on the official page); formal rules still unpublished |
-| Phase | **REAL WIRING DONE 12 Nov 2026** — Firebase AI Logic hybrid engine is live in code (tests 23/23 PASS, vite build PASS, static serve 200). No Firebase project yet (console setup needed — see `app/REAL_WIRING_NOTES.md`). No repo, no deploy, no video, no submission yet. |
+| Phase | **REAL WIRING DONE 12 Nov 2026** — Firebase AI Logic hybrid engine is live in code (tests 23/23 PASS, vite build PASS, static serve 200). No Firebase project yet (console setup needed — see `app/REAL_WIRING_NOTES.md`). Repo: MSAbhishek22/notevault-hybrid; deployed live at https://notevault-hybrid.vercel.app. |
 | Build | 12 Nov 2026, real wiring (replaces the 5 Nov mock shell) |
 
 ## What is real vs mock now (12 Nov 2026)
@@ -30,7 +32,7 @@ and every answer shows you which path served it and why.
 - **NOT YET REAL:** no Firebase project exists, so the app cannot make a live call
   until the console setup in `app/REAL_WIRING_NOTES.md` is done; live end-to-end
   (real Nano download + real cloud call) is unverified in this sandbox and must be
-  checked on the deployed site. No repo / deploy / video / submission yet.
+  checked on the deployed site. Repo and deploy are live (see the Live demo link above).
 - Full detail: `app/REAL_WIRING_NOTES.md`.
 
 ## What this is
