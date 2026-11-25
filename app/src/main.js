@@ -111,7 +111,13 @@ function renderNoteList(items) {
   if (count) count.textContent = `${items.length} note${items.length === 1 ? "" : "s"}`;
 }
 
+// Overlapping refreshList calls (one per keystroke) resolve asynchronously;
+// only the newest call may render, so a slow earlier call can never repaint
+// a stale list over a newer filtered one.
+let refreshSeq = 0;
+
 async function refreshList(query = undefined) {
+  const seq = ++refreshSeq;
   const q = (query ?? $("search-notes")?.value ?? "").trim();
   const items = q ? await searchNotes(q) : (await listNotes()).map((note) => ({ note, score: 0, excerpt: "" }));
   // Fill excerpts for the unfiltered view.
@@ -121,6 +127,7 @@ async function refreshList(query = undefined) {
       item.excerpt = body.length > 160 ? `${body.slice(0, 160)}…` : body;
     }
   }
+  if (seq !== refreshSeq) return; // superseded by a newer call while awaiting
   renderNoteList(items);
 }
 
@@ -394,21 +401,12 @@ async function onInitModel() {
 }
 
 // --- Boot --------------------------------------------------------------------
-async function boot() {
-  const info = getEngineInfo();
-  engineLabel = info.configured ? "Firebase AI Logic" : "Not configured";
-  const banner = $("engine-banner");
-  if (banner) {
-    banner.textContent = info.configured
-      ? `FIREBASE AI LOGIC — ${info.note}`
-      : `FIREBASE AI LOGIC — NOT CONFIGURED. ${info.note}`;
-  }
-  await seedSamples();
-  await refreshList();
-  renderBudget();
-  updateModeBadge();
-  updateOnline();
-
+// Bind every control FIRST, synchronously, before any await. This module is
+// deferred, so the DOM already exists. Binding at the end of an async boot
+// (after IndexedDB seeding and the first render) meant any stall or throw
+// during warm-up left a fully rendered page whose controls were all dead —
+// the list painted, but search/ask/import silently did nothing.
+function bindUi() {
   $("search-notes")?.addEventListener("input", () => refreshList());
   $("search-notes")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") refreshList();
@@ -468,6 +466,23 @@ async function boot() {
 
   window.addEventListener("online", updateOnline);
   window.addEventListener("offline", updateOnline);
+}
+
+async function boot() {
+  bindUi();
+  const info = getEngineInfo();
+  engineLabel = info.configured ? "Firebase AI Logic" : "Not configured";
+  const banner = $("engine-banner");
+  if (banner) {
+    banner.textContent = info.configured
+      ? `FIREBASE AI LOGIC — ${info.note}`
+      : `FIREBASE AI LOGIC — NOT CONFIGURED. ${info.note}`;
+  }
+  await seedSamples();
+  await refreshList();
+  renderBudget();
+  updateModeBadge();
+  updateOnline();
 }
 
 boot().catch((err) => {
