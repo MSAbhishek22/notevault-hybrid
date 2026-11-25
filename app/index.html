@@ -126,7 +126,9 @@ var orbit=new THREE.Group();
 group.add(orbit);
 var cards=[];
 for(var i=0;i<6;i++){
-var card=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.75),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
+var card=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.75),new THREE.MeshBasicMaterial({color:0xe3f2e6,side:THREE.DoubleSide}));
+var edges=new THREE.LineSegments(new THREE.EdgesGeometry(card.geometry),new THREE.LineBasicMaterial({color:0x1f6b3a}));
+card.add(edges);
 var a=i/6*Math.PI*2;
 card.position.set(Math.cos(a)*1.9,Math.sin(a*2)*0.35,Math.sin(a)*1.9);
 orbit.add(card);

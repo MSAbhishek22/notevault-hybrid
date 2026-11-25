@@ -111,7 +111,7 @@ function renderNoteList(items) {
   if (count) count.textContent = `${items.length} note${items.length === 1 ? "" : "s"}`;
 }
 
-async function refreshList(query = "") {
+async function refreshList(query = undefined) {
   const q = (query ?? $("search-notes")?.value ?? "").trim();
   const items = q ? await searchNotes(q) : (await listNotes()).map((note) => ({ note, score: 0, excerpt: "" }));
   // Fill excerpts for the unfiltered view.
@@ -410,6 +410,9 @@ async function boot() {
   updateOnline();
 
   $("search-notes")?.addEventListener("input", () => refreshList());
+  $("search-notes")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") refreshList();
+  });
   $("ask-btn")?.addEventListener("click", onAsk);
   $("question")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") onAsk();
