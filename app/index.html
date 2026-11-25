@@ -6,11 +6,15 @@
   <title>NoteVault Hybrid — your notes, on-device first</title>
   <meta name="description" content="NoteVault Hybrid: your notes never leave your device unless you ask. On-device first, cloud when it earns it. Firebase AI Logic hybrid inference (Gemini Nano + cloud Gemini)." />
   <link rel="stylesheet" href="/src/style.css" />
+<style>#hero3d{display:block;width:100%;height:260px;background:#fffdf7;border:1px solid #ddd5c3;margin:0 0 4px}.scroll-cue{font-size:14px}</style>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 </head>
 <body>
   <header>
     <h1>NoteVault Hybrid</h1>
     <p class="tagline">Your notes never leave your device unless you ask.</p>
+<canvas id="hero3d" aria-label="Three.js 3D vault: your notes orbit the on-device core, the cloud ring stays outside. Drag to spin."></canvas>
+<p><a class="scroll-cue" href="#vault">Scroll to your vault &darr;</a></p>
     <div id="engine-banner" role="status">Loading…</div>
     <div class="header-row">
       <label class="privacy-toggle">
@@ -97,5 +101,74 @@
 
   <noscript><p style="padding:1rem">NoteVault Hybrid needs JavaScript — the vault, search and hybrid engine all run in your browser.</p></noscript>
   <script type="module" src="/src/main.js"></script>
+<script>
+(function(){
+var cv=document.getElementById('hero3d');
+if(!cv||!window.THREE){return;}
+var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var renderer;
+try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}
+catch(e){return;}
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+var scene=new THREE.Scene();
+var camera=new THREE.PerspectiveCamera(50,2,0.1,100);
+camera.position.set(0,0.4,5.4);
+camera.lookAt(0,0,0);
+var group=new THREE.Group();
+scene.add(group);
+
+var core=new THREE.Mesh(new THREE.SphereGeometry(0.6,24,18),new THREE.MeshBasicMaterial({color:0x1f6b3a}));
+group.add(core);
+var coreRing=new THREE.Mesh(new THREE.TorusGeometry(1.05,0.03,8,64),new THREE.MeshBasicMaterial({color:0x1f6b3a}));
+coreRing.rotation.x=Math.PI/2.5;
+group.add(coreRing);
+var orbit=new THREE.Group();
+group.add(orbit);
+var cards=[];
+for(var i=0;i<6;i++){
+var card=new THREE.Mesh(new THREE.PlaneGeometry(0.55,0.75),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
+var a=i/6*Math.PI*2;
+card.position.set(Math.cos(a)*1.9,Math.sin(a*2)*0.35,Math.sin(a)*1.9);
+orbit.add(card);
+cards.push(card);
+}
+var cloud=new THREE.Mesh(new THREE.TorusGeometry(2.3,0.02,8,80),new THREE.MeshBasicMaterial({color:0x8a6d00}));
+cloud.rotation.x=Math.PI/2;
+group.add(cloud);
+
+function resize(){
+var w=cv.clientWidth||800;
+var h=cv.clientHeight||260;
+renderer.setSize(w,h,false);
+camera.aspect=w/h;
+camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize);
+resize();
+var dragging=false,lastX=0,vel=0;
+cv.addEventListener('pointerdown',function(e){dragging=true;lastX=e.clientX;});
+window.addEventListener('pointerup',function(){dragging=false;});
+cv.addEventListener('pointermove',function(e){
+if(!dragging){return;}
+var dx=e.clientX-lastX;
+lastX=e.clientX;
+group.rotation.y+=dx*0.005;
+vel=dx*0.0004;
+});
+var start=Date.now();
+function tick(){
+requestAnimationFrame(tick);
+var t=(Date.now()-start)/1000;
+if(!document.hidden&&!reduced){
+group.rotation.y+=0.0035+vel;
+vel*=0.95;
+orbit.rotation.y+=0.006;
+coreRing.rotation.z+=0.004;
+cards.forEach(function(c){c.lookAt(camera.position);});}
+renderer.render(scene,camera);
+}
+tick();
+})();
+</script>
 </body>
 </html>
